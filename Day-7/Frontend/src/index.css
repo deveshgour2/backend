@@ -17,6 +17,7 @@ html{
 
 .notes{
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   padding-inline: 3rem;
   padding-block: 1rem;
@@ -33,3 +34,21 @@ h1{
   font-size: 1.5rem;
 }
 
+.note-create-form{
+  display: flex;
+  padding-inline: 3rem;
+  padding-block: 1rem;
+  gap: 1rem;
+  
+}
+
+input{
+  outline: none;
+  padding-inline: 1rem;
+  padding-block: 0.2rem;
+}
+
+.note-create-form button{
+   padding-inline: 1rem;
+  padding-block: 0.2rem;
+}
