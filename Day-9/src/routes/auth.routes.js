@@ -19,7 +19,7 @@ authRouter.post("/register", async (req, res) => {
     const hash = crypto.createHash('md5').update(password).digest("hex")
 
     const user = await userModel.create({
-        name, email, password:hash
+        name, email, password: hash
     })
 
     const token = jwt.sign(
@@ -34,7 +34,7 @@ authRouter.post("/register", async (req, res) => {
 
     res.status(201).json({
         message: "user created successfully",
-        user,
+        user: { id: user._id, name: user.name, email: user.email },
         token
     })
 })
@@ -68,12 +68,12 @@ authRouter.post('/login', async (req, res) => {
         },
         process.env.JWT_SECRET
     )
-    res.cookie("Jwt_token",token)
+    res.cookie("Jwt_token", token)
 
     res.status(200).json({
-        message:"logged in successfully",
-        user,
-    
+        message: "logged in successfully",
+        user: { id: user._id, name: user.name, email: user.email },
+        token
     })
 
 })
