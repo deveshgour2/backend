@@ -1,5 +1,4 @@
 const userModel = require('../models/user.model')
-const crypto = require("crypto")
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
 
@@ -35,7 +34,7 @@ async function registerController(req, res){
         }, process.env.JWT_SECRET,
         { expiresIn: "1d" }
     )
-    res.cookie('jwt_token', token)
+    res.cookie('token', token)
 
     res.status(201).json({
         message: "user registered successfully",
@@ -81,7 +80,7 @@ async function registerController(req, res){
 
     res.cookie('token', token)
 
-    res.status(201).json({
+    res.status(200).json({
         message: "LoggenIn successfully",
         user: {
             email: user.email,
