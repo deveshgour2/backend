@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const cookies = require("cookie-parser")
+
 
 async function identifyUser(req, res, next) {
 
@@ -21,7 +21,7 @@ async function identifyUser(req, res, next) {
         })
     }
 
-    decoded = req.user
+    req.user = decoded
     next()
 }
 

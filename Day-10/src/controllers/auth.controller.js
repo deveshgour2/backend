@@ -1,10 +1,9 @@
 const userModel = require('../models/user.model')
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
-const cookie = require("cookie-parser")
 
-async function registerController(req, res){
-    const { username, email, password, bio, profile_image } = req.body
+async function registerController(req, res) {
+    const { username, email, password, bio, profile_image,isPrivate } = req.body
 
     const ifUserAlreadyExists = await userModel.findOne({
         $or: [
@@ -15,7 +14,7 @@ async function registerController(req, res){
 
     if (ifUserAlreadyExists) {
         res.status(409).json({
-            message: "user already exists " + (ifUserAlreadyExists.email) == email ? "email already exists" : "username already exists"
+            message: (ifUserAlreadyExists.email) == email ? "email already exists" : "username already exists"
         })
     }
 
@@ -26,12 +25,14 @@ async function registerController(req, res){
         email,
         password: hash,
         bio,
-        profile_image
+        profile_image,
+        isPrivate
     })
 
     const token = jwt.sign(
         {
-            id: user._id
+            id: user._id,
+            username: user.username
         }, process.env.JWT_SECRET,
         { expiresIn: "1d" }
     )
@@ -43,12 +44,13 @@ async function registerController(req, res){
             email: user.email,
             username: user.username,
             bio: user.bio,
-            profile_image: user.profile_image
+            profile_image: user.profile_image,
+            private:user.isPrivate
         }
     })
 }
 
- async function loginController (req, res){
+async function loginController(req, res) {
     const { email, username, password } = req.body
 
     const user = await userModel.findOne({
@@ -64,17 +66,17 @@ async function registerController(req, res){
         })
     }
 
-    
-    const isPasswordMatched = await  bcrypt.compare(password, user.password)
+
+    const isPasswordMatched = await bcrypt.compare(password, user.password)
 
     if (!isPasswordMatched) {
-        return res.status(404).json({
+        return res.status(401).json({
             message: "Invalid password"
         })
     }
 
     const token = jwt.sign(
-        { id: user._id },
+        { id: user._id, username: user.username },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
     )
@@ -86,8 +88,8 @@ async function registerController(req, res){
         user: {
             email: user.email,
             username: user.username,
-            bio: user.bio
-
+            bio: user.bio,
+            private:user.isPrivate
         }
     })
 }

@@ -7,13 +7,24 @@ async function followUserController(req, res){
     const followeeUsername = req.params.username
 
     if(followeeUsername === followerUsername){
-        return res.status(200).json({
+        return res.status(400).json({
             message:"you can not follow yourself"
         })
     }
 
-    const isAlreadyFollowing = await userModel.findOne({
-        follower: followeeUsername,
+    const isFolloweeExists = await userModel.findOne({
+        username: followeeUsername
+    })
+
+    if(!isFolloweeExists){
+        return res.status(404).json({
+            message:"user you are trying to follow is not exists"
+        })
+    }
+
+    
+    const isAlreadyFollowing = await followModel.findOne({
+        follower: followerUsername,
         followee:followeeUsername
     })
 
@@ -24,20 +35,20 @@ async function followUserController(req, res){
         })
     }
 
-    const isFolloweExists = await userModel.findOne({
-        username: followeeUsername
+    const status = isFolloweeExists.isPrivate ? 'pending' : 'accepted' 
+
+    const  followRecord = await followModel.create({
+        follower:followerUsername,
+        followee : followeeUsername,
+        status
     })
 
-    if(!isFolloweExists){
-        return res.status(404).json({
-            message:"user you are trying to follow is not exists"
+    if(status == "pending"){
+        return res.status(201).json({
+            message:`follow request sent to ${followeeUsername}`,
+            follow:followRecord
         })
     }
-
-    const  followRecord = await userModel.create({
-        follower:followerUsername,
-        followee : followeeUsername
-    })
 
     res.status(201).json({
         message:`you are now following ${followeeUsername}`,
@@ -47,6 +58,29 @@ async function followUserController(req, res){
 
 }
 
+async function unfollowUserController(req, res){
+    const followerUsername = req.user.username
+    const followeeUsername = req.params.username
+
+    const isUserFollowing = await followModel.findOne({
+        follower:followerUsername,
+        followee:followeeUsername
+    })
+
+    if(!isUserFollowing){
+        return res.status(200).json({
+            message:`you are not following ${followeeUsername}`
+        })
+    }
+
+    await followModel.findByIdAndDelete(isUserFollowing._id)
+
+    res.status(200).json({
+        message:`you are unfollowed ${followeeUsername}`
+    })
+}
+
 module.exports = {
-    followUserController
+    followUserController,
+    unfollowUserController
 }
