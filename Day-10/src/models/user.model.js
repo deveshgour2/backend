@@ -26,14 +26,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "https://ik.imagekit.io/vvxgcus14/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.webp"
     },
-    followers: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "users"
-    }],
-    following: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref:"users"
-    }]
+   
 })
 
 const userModel = mongoose.model("users", userSchema)
