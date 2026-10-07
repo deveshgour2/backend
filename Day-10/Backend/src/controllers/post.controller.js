@@ -12,8 +12,6 @@ const imageKit = new ImageKit({
 
 async function createPostController(req, res) {
 
-    console.log(req.body, req.file)
-
     const file = await imageKit.files.upload({
         file: await toFile(Buffer.from(req.file.buffer), "file"),
         fileName: "test",

@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
 
 async function registerController(req, res) {
-    const { username, email, password, bio, profile_image,isPrivate } = req.body
+    const { username, email, password, bio, profile_image, isPrivate } = req.body
 
     const ifUserAlreadyExists = await userModel.findOne({
         $or: [
@@ -45,7 +45,7 @@ async function registerController(req, res) {
             username: user.username,
             bio: user.bio,
             profile_image: user.profile_image,
-            private:user.isPrivate
+            private: user.isPrivate
         }
     })
 }
@@ -84,12 +84,12 @@ async function loginController(req, res) {
     res.cookie('token', token)
 
     res.status(200).json({
-        message: "LoggenIn successfully",
+        message: "LoggedIn successfully",
         user: {
             email: user.email,
             username: user.username,
             bio: user.bio,
-            private:user.isPrivate
+            private: user.isPrivate
         }
     })
 }
