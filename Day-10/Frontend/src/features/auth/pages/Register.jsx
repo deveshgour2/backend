@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import '../style/form.scss'
 import { Link } from 'react-router'
-import axios from 'axios'
+import { useAuth } from '../hooks/useAuth'
+import { useNavigate } from 'react-router'
+
 
 const Register = () => {
 
@@ -9,20 +11,23 @@ const Register = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  async function submitHandler(e){
+  const { loading, handleRegister } = useAuth()
+  const navigate = useNavigate()
+
+  if (loading) {
+    return (
+      <h1>Loading...</h1>
+    )
+  }
+
+  async function submitHandler(e) {
     e.preventDefault()
 
-    axios.post("http://localhost:3000/api/auth/register",{
-      username,
-      email,
-      password
-    },{
-      withCredentials:true
-    })
-
-    .then(res => {
-      console.log(res.data)
-    })
+    handleRegister(username, email, password)
+      .then(res => {
+        console.log(res)
+        navigate('/')
+      })
   }
 
   return (
@@ -39,7 +44,7 @@ const Register = () => {
             placeholder='Enter username' />
 
           <input
-           onInput={(e) => { setEmail(e.target.value) }}
+            onInput={(e) => { setEmail(e.target.value) }}
             type="text"
             name='email'
             placeholder='Enter email' />

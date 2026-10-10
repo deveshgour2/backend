@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
         try {
             const response = await login(username, password)
             setUser(response.user)
+            return response
         }
         catch (err) {
             console.log(err)
@@ -22,6 +23,8 @@ export function AuthProvider({ children }) {
         finally {
             setLoading(false)
         }
+
+
     }
 
     const handleRegister = async (username, email, password) => {
@@ -29,6 +32,7 @@ export function AuthProvider({ children }) {
         try {
             const response = await register(username, email, password)
             setUser(response.user)
+            return response
         }
         catch (err) {
             console.log(err);
@@ -36,10 +40,12 @@ export function AuthProvider({ children }) {
         finally {
             setLoading(false)
         }
+
+
     }
 
     return (
-        <AuthContext.Provider value={{user, loading, handleLogin , handleRegister}}>
+        <AuthContext.Provider value={{ user, loading, handleLogin, handleRegister }}>
             {children}
         </AuthContext.Provider>
     )

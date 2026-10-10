@@ -1,0 +1,83 @@
+.feed-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: translate(-5%);
+
+
+    .feed {
+        max-width: 300px;
+        width: 100%;
+
+
+        .posts {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+
+            .post {
+                display: flex;
+                flex-direction: column;
+                background-color: rgb(70, 68, 68);
+                border-radius: 1rem;
+                padding: 0.5rem;
+                gap: 0.5rem;
+
+                .user {
+
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+
+                    .img-wrapper {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        border-radius: 50%;
+                        border: 3px solid transparent;
+                        background: conic-gradient(rgb(255, 102, 0), rgb(105, 0, 128), rgb(255, 102, 0));
+                    }
+
+                    img {
+                        width: 2rem;
+                        aspect-ratio: 1/1;
+                        border-radius: 50%;
+                    }
+                }
+
+
+
+                .icons {
+                    display: flex;
+                    justify-content: space-between;
+
+                    .like {
+                        color: red;
+                    }
+
+                    .left {
+                        display: flex;
+                        gap: 0.5rem;
+                    }
+
+                    svg {
+                        width: 1rem;
+                        aspect-ratio: 1/1;
+                        color: white;
+                    }
+
+                    button {
+                        border: none;
+                        outline: none;
+                        background-color: transparent;
+                    }
+                }
+
+                img {
+                    width: 100%;
+                }
+            }
+        }
+    }
+}
