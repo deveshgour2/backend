@@ -8,7 +8,7 @@ const Nav = () => {
 
   return (
     <div className="navbar">
-        <h1>Insta</h1>
+        <h1>Pixora</h1>
         <button
         onClick={()=>{navigate('/create-post')}}
         >Create Post</button>

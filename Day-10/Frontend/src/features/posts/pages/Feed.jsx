@@ -15,8 +15,7 @@ const Feed = () => {
     if (loading || !feed) {
         return (<main><h1>Feed is loading...</h1></main>)
     }
-    console.log(feed)
-
+  
     return (
         <> <Nav />
             <main className="feed-page">
