@@ -5,7 +5,7 @@ import {
 
 export const init = async ({ landmarkerRef, videoRef, streamRef }) => {
     const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.0/wasm"
     );
     landmarkerRef.current = await FaceLandmarker.createFromOptions(
         vision,
@@ -44,14 +44,15 @@ export const detect = ({ landmarkerRef, videoRef, setExpression}) => {
         const frownRight = getScore("mouthFrownRight");
         let currentExpression = "Neutral";
         if (smileLeft > 0.5 && smileRight > 0.5) {
-            currentExpression = "Happy 😄";
+            currentExpression = "happy";
         } else if (jawOpen > 0.2 && browUp > 0.2) {
-            currentExpression = "Surprised 😲";
+            currentExpression = "surprised";
         } else if (frownLeft > 0.01 && frownRight > 0.01) {
-            currentExpression = "Sad 😢";
+            currentExpression = "sad";
         }
         setExpression(currentExpression);
-        console.log(getScore("mouthSmileLeft"), getScore("mouthSmileRight"))
+
+        return currentExpression
     }
 
 };
