@@ -1,0 +1,28 @@
+import { body, validationResult } from "express-validator"
+
+export function validate(req, res, next) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() })
+    }
+    next()
+}
+
+export const registerValidator = [
+    body('username')
+        .trim()
+        .notEmpty().withMessage("username is required")
+        .isLength({ min: 3, max: 30 }).withMessage("username must be between 3 to 30 characters")
+        .matches(/^[a-zA-Z0-9_]+$/).withMessage("username can only contain letters, numbers, and underscores"),
+
+    body('email')
+        .trim()
+        .notEmpty().withMessage("email is required")
+        .isEmail().withMessage("Please provide a valid email"),
+
+    body("password")
+        .notEmpty().withMessage("password is required")
+        .isLength({ min: 8 }).withMessage("password must be atleast 8 characters"),
+
+    validate
+]
