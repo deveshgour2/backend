@@ -5,10 +5,3 @@ const model = new ChatGoogle({
   apiKey: process.env.GEMINI_API_KEY
 });
 
-export async function testAI(){
-    model.invoke("hello")
-    .then((response)=>{
-        console.log(response.text)
-    })
-} 
-
