@@ -2,23 +2,13 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    username: '',
-    password: '',
-  })
-
-  const handleChange = (event) => {
-    const { name, value } = event.target
-    setFormData((currentData) => ({
-      ...currentData,
-      [name]: value,
-    }))
-  }
+  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    console.log('Registration submitted', formData)
+    console.log('Registration submitted', { email, username, password })
   }
 
   return (
@@ -42,12 +32,11 @@ const Register = () => {
             <input
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-[#1D7F86] focus:ring-2 focus:ring-[#1D7F86]/30"
               id="register-email"
-              name="email"
-              onChange={handleChange}
+              onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
               required
               type="email"
-              value={formData.email}
+              value={email}
             />
           </div>
 
@@ -58,12 +47,11 @@ const Register = () => {
             <input
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-[#1D7F86] focus:ring-2 focus:ring-[#1D7F86]/30"
               id="register-username"
-              name="username"
-              onChange={handleChange}
+              onChange={(event) => setUsername(event.target.value)}
               placeholder="Choose a username"
               required
               type="text"
-              value={formData.username}
+              value={username}
             />
           </div>
 
@@ -74,12 +62,11 @@ const Register = () => {
             <input
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-[#1D7F86] focus:ring-2 focus:ring-[#1D7F86]/30"
               id="register-password"
-              name="password"
-              onChange={handleChange}
+              onChange={(event) => setPassword(event.target.value)}
               placeholder="Create a password"
               required
               type="password"
-              value={formData.password}
+              value={password}
             />
           </div>
 

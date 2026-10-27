@@ -1,23 +1,33 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, Navigate, useNavigate } from 'react-router'
+import { useAuth } from '../hooks/useAuth'
+import { useSelector } from 'react-redux'
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
-  const handleChange = (event) => {
-    const { name, value } = event.target
-    setFormData((currentData) => ({
-      ...currentData,
-      [name]: value,
-    }))
+  const user = useSelector(state => state.auth.user)
+  const loading = useSelector(state => state.auth.loading)
+
+  const { handleLogin } = useAuth()
+
+  const navigate = useNavigate()
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+
+    const payload = {
+      email,
+      password
+    }
+
+    await handleLogin(payload)
+    navigate("/")
   }
 
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    console.log('Login submitted', formData)
+  if(!loading && user){
+    return <Navigate to="/" replace />
   }
 
   return (
@@ -41,12 +51,11 @@ const Login = () => {
             <input
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-[#1D7F86] focus:ring-2 focus:ring-[#1D7F86]/30"
               id="login-email"
-              name="email"
-              onChange={handleChange}
+              onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
               required
               type="email"
-              value={formData.email}
+              value={email}
             />
           </div>
 
@@ -57,12 +66,11 @@ const Login = () => {
             <input
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-[#1D7F86] focus:ring-2 focus:ring-[#1D7F86]/30"
               id="login-password"
-              name="password"
-              onChange={handleChange}
+              onChange={(event) => setPassword(event.target.value)}
               placeholder="Enter your password"
               required
               type="password"
-              value={formData.password}
+              value={password}
             />
           </div>
 
