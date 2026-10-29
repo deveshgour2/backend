@@ -7,7 +7,7 @@ const messageSchema = new mongoose.Schema({
         required: true
     },
     content: {
-        type: string,
+        type: String,
         required: true
     },
     role: {
