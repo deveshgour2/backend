@@ -1,15 +1,37 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
+import { useNavigate, Navigate } from 'react-router'
+import { useAuth } from '../hooks/useAuth'
+import { useSelector } from 'react-redux'
 
 const Register = () => {
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
-  const handleSubmit = (event) => {
+  const user = useSelector(state => state.auth.user)
+  const loading = useSelector(state => state.auth.loading)
+
+  const { handleRegister } = useAuth()
+
+  const navigate = useNavigate()
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    console.log('Registration submitted', { email, username, password })
+    const payload = {
+      username,
+      email,
+      password
+    }
+    await handleRegister(payload)
+    navigate("/")
   }
+
+
+  if (!loading && user) {
+    return <Navigate to="/" replace />
+  }
+
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-black px-4 py-12 text-slate-100">

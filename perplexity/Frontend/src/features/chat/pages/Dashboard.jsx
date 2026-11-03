@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import ReactMarkdown from 'react-markdown'
+import { useNavigate } from 'react-router'
 import { useChat } from '../hooks/useChat'
+import { useAuth } from '../../auth/hooks/useAuth'
 
 const Icon = ({ children, className = 'h-5 w-5' }) => (
   <svg
@@ -19,12 +21,15 @@ const Icon = ({ children, className = 'h-5 w-5' }) => (
 )
 
 const Dashboard = () => {
-  const { initializeSocketConnection, handleSendMessage, handleGetChats, handleGetMessages } = useChat()
+  const { initializeSocketConnection, handleSendMessage, handleGetChats, handleGetMessages, handleDeleteChat } = useChat()
+  const { handleLogout } = useAuth()
+  const navigate = useNavigate()
   const { user } = useSelector((state) => state.auth)
   const { chats = {}, currentChatId, isLoading } = useSelector((state) => state.chat)
   const [prompt, setPrompt] = useState('')
   const [activeChatId, setActiveChatId] = useState(currentChatId || null)
   const [pendingMessage, setPendingMessage] = useState(null)
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false)
 
   useEffect(() => {
     initializeSocketConnection()
@@ -51,7 +56,6 @@ const Dashboard = () => {
     const trimmedPrompt = prompt.trim()
     if (!trimmedPrompt || isLoading) return
 
-    // Clear the composer while the request is in flight. Restore it if the API fails.
     setPrompt('')
     setPendingMessage(trimmedPrompt)
     try {
@@ -73,11 +77,36 @@ const Dashboard = () => {
     setActiveChatId(null)
   }
 
+  const deleteConversation = async (chatId = activeChatId) => {
+    if (!chatId) return
+
+    try {
+      await handleDeleteChat(chatId)
+      if (chatId === activeChatId) {
+        setActiveChatId(null)
+        setPrompt('')
+        setIsOptionsOpen(false)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const logout = async () => {
+    try {
+      await handleLogout()
+      navigate('/login', { replace: true })
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   const displayName = user?.username || user?.name || 'there'
+  const activeChatTitle = activeChat?.title || 'New conversation'
 
   return (
     <main className="flex h-screen w-full overflow-hidden bg-[#101314] text-[#d3d5da]">
-      <aside className="hidden w-65 shrink-0 flex-col border-r border-white/[0.07] bg-[#171a1b] md:flex">
+      <aside className="hidden w-80 shrink-0 flex-col border-r border-white/[0.07] bg-[#171a1b] md:flex">
         <div className="flex h-19 items-center gap-3 px-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1d7f86] shadow-lg shadow-[#1d7f86]/20">
             <Icon className="h-5 w-5 text-[#d3d5da]">
@@ -89,7 +118,7 @@ const Dashboard = () => {
 
         <div className="px-3">
           <button
-            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-medium text-[#d3d5da] transition hover:border-[#1d7f86]/60 hover:bg-[#1d7f86]/10"
+            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/6 px-4 py-3 text-base font-medium text-[#d3d5da] transition hover:border-[#1d7f86]/60 hover:bg-[#1d7f86]/10"
             onClick={startNewChat}
             type="button"
           >
@@ -100,45 +129,57 @@ const Dashboard = () => {
           </button>
         </div>
 
-        <div className="mt-8 flex-1 overflow-y-auto px-3">
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d3d5da]">
+        <div className="scrollbar-none mt-8 flex-1 overflow-y-auto px-3">
+          <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#d3d5da]">
             Recent conversations
           </p>
           <div className="mt-3 space-y-1">
             {recentChats.length === 0 ? (
-              <p className="px-3 py-3 text-xs leading-5 text-[#d3d5da]">
+              <p className="px-3 py-3 text-sm leading-5 text-[#d3d5da]">
                 Your conversations will appear here after you send a message.
               </p>
             ) : recentChats.map((chat) => (
-              <button
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition ${activeChatId === chat._id ? 'bg-[#1d7f86]/15 text-[#d3d5da]' : 'text-[#d3d5da] hover:bg-white/5 hover:text-[#d3d5da]'}`}
+              <div
+                className={`group flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-base transition ${activeChatId === chat._id ? 'bg-[#1d7f86]/15 text-[#d3d5da]' : 'text-[#d3d5da] hover:bg-white/5 hover:text-[#d3d5da]'}`}
                 key={chat._id}
-                onClick={() => selectChat(chat._id)}
-                type="button"
               >
-                <Icon className="h-4 w-4 shrink-0">
-                  <path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.5 8.5 0 0 1-4-.9L4 19l1-3.5a7.2 7.2 0 0 1-1-4A7.5 7.5 0 0 1 12 4a7.5 7.5 0 0 1 8 7.5Z" />
-                </Icon>
-                <span className="truncate">{chat.title || 'New conversation'}</span>
-              </button>
+                <button
+                  className="flex min-w-0 flex-1 items-center gap-3 py-1 text-left"
+                  onClick={() => selectChat(chat._id)}
+                  type="button"
+                >
+                  <Icon className="h-4 w-4 shrink-0">
+                    <path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.5 8.5 0 0 1-4-.9L4 19l1-3.5a7.2 7.2 0 0 1-1-4A7.5 7.5 0 0 1 12 4a7.5 7.5 0 0 1 8 7.5Z" />
+                  </Icon>
+                  <span className="truncate">{chat.title || 'New conversation'}</span>
+                </button>
+                <button
+                  aria-label={`Delete ${chat.title || 'conversation'}`}
+                  className="shrink-0 rounded-lg p-1.5 text-[#d3d5da] opacity-0 transition hover:bg-red-500/15 hover:text-red-300 group-hover:opacity-100 focus-visible:opacity-100"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    deleteConversation(chat._id)
+                  }}
+                  type="button"
+                >
+                  <Icon className="h-4 w-4">
+                    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                  </Icon>
+                </button>
+              </div>
             ))}
           </div>
         </div>
 
-        <div className="border-t border-white/[0.07] p-3">
+        <div className="relative border-t border-white/[0.07] p-3">
           <div className="flex items-center gap-3 rounded-xl px-3 py-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1d7f86] text-xs font-bold uppercase text-[#d3d5da]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1d7f86] text-sm font-bold uppercase text-[#d3d5da]">
               {displayName.charAt(0)}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-[#d3d5da]">{displayName}</p>
-              <p className="text-xs text-[#d3d5da]">Personal workspace</p>
+              <p className="truncate text-base font-medium text-[#d3d5da]">{displayName}</p>
+              <p className="text-sm text-[#d3d5da]">Personal workspace</p>
             </div>
-            <button aria-label="Account options" className="ml-auto text-[#d3d5da] hover:text-[#d3d5da]" type="button">
-              <Icon className="h-4 w-4">
-                <path d="M6 9l6 6 6-6" />
-              </Icon>
-            </button>
           </div>
         </div>
       </aside>
@@ -153,18 +194,31 @@ const Dashboard = () => {
             </div>
             <span className="text-xl font-bold text-[#d3d5da]">Nexa</span>
           </div>
-          <p className="hidden text-sm font-medium text-[#d3d5da] md:block">New conversation</p>
-          <button aria-label="More options" className="rounded-lg p-2 text-[#d3d5da] transition hover:bg-white/6 hover:text-[#d3d5da]" type="button">
-            <Icon>
-              <circle cx="5" cy="12" r="1" />
-              <circle cx="12" cy="12" r="1" />
-              <circle cx="19" cy="12" r="1" />
-            </Icon>
-          </button>
+          <p className="hidden max-w-[60%] truncate text-base font-medium text-[#d3d5da] md:block">{activeChatTitle}</p>
+          <div className="relative">
+            <button aria-expanded={isOptionsOpen} aria-label="More options" className="rounded-lg p-2 text-[#d3d5da] transition hover:bg-white/6 hover:text-[#d3d5da]" onClick={() => setIsOptionsOpen((open) => !open)} type="button">
+              <Icon>
+                <circle cx="5" cy="12" r="1" />
+                <circle cx="12" cy="12" r="1" />
+                <circle cx="19" cy="12" r="1" />
+              </Icon>
+            </button>
+            {isOptionsOpen && (
+              <div className="absolute right-0 top-12 z-10 rounded-lg border border-white/10 bg-[#202526] p-1 shadow-lg">
+                <button className="whitespace-nowrap rounded-md px-3 py-2 text-base text-red-300 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-50" disabled={!activeChatId} onClick={deleteConversation} type="button">
+                  Delete conversation
+                </button>
+                <button className="block w-full whitespace-nowrap rounded-md px-3 py-2 text-left text-base text-[#d3d5da] hover:bg-white/10" onClick={logout} type="button">
+                  Log out
+                </button>
+              </div>
+            )}
+          </div>
         </header>
 
-        <div className="flex flex-1 flex-col overflow-y-auto">
-          <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-5 pb-8 pt-10 sm:px-8 sm:pt-16">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto">
+            <div className="mx-auto flex w-full max-w-3xl min-h-full flex-col px-5 pb-8 pt-10 sm:px-8 sm:pt-16">
             {displayedMessages.length === 0 ? (
               <div className="my-auto">
                 <div className="mb-9 text-center">
@@ -173,13 +227,13 @@ const Dashboard = () => {
                       <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" />
                     </Icon>
                   </div>
-                  <h1 className="text-5xl font-bold tracking-tight text-[#d3d5da] sm:text-5xl">How can I help you today?</h1>
-                  <p className="mx-auto mt-3 max-w-lg text-base leading-7 text-[#d3d5da]">
+                  <h1 className="text-6xl font-bold tracking-tight text-[#d3d5da] sm:text-5xl">How can I help you today?</h1>
+                  <p className="mx-auto mt-3 max-w-lg text-lg leading-7 text-[#d3d5da]">
                     Ask anything, explore new ideas, or get help turning your thoughts into action.
                   </p>
                 </div>
 
-                <p className="text-center text-base text-[#d3d5da]">Start a conversation using the message box below.</p>
+                <p className="text-center text-lg text-[#d3d5da]">Start a conversation using the message box below.</p>
               </div>
             ) : (
               <div className="space-y-7">
@@ -192,21 +246,21 @@ const Dashboard = () => {
                         </Icon>
                       </div>
                     )}
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-lg leading-7 ${message.role === 'user' ? 'bg-[#1d7f86] text-[#d3d5da]' : 'bg-white/6 text-[#d3d5da]'}`}>
+                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-xl leading-8 ${message.role === 'user' ? 'bg-[#1d7f86] text-[#d3d5da]' : 'bg-white/6 text-[#d3d5da]'}`}>
                       {message.role === 'user' ? (
                         message.content
                       ) : (
                         <ReactMarkdown
                           components={{
-                            h1: ({ children }) => <h1 className="mb-3 text-xl font-semibold text-[#d3d5da]">{children}</h1>,
-                            h2: ({ children }) => <h2 className="mb-3 text-lg font-semibold text-[#d3d5da]">{children}</h2>,
+                            h1: ({ children }) => <h1 className="mb-3 text-2xl font-semibold text-[#d3d5da]">{children}</h1>,
+                            h2: ({ children }) => <h2 className="mb-3 text-xl font-semibold text-[#d3d5da]">{children}</h2>,
                             h3: ({ children }) => <h3 className="mb-2 font-semibold text-[#d3d5da]">{children}</h3>,
-                            p: ({ children }) => <p className="mb-3 text-lg leading-7 last:mb-0">{children}</p>,
+                            p: ({ children }) => <p className="mb-3 text-xl leading-8 last:mb-0">{children}</p>,
                             ul: ({ children }) => <ul className="mb-3 list-disc space-y-1 pl-5 last:mb-0">{children}</ul>,
                             ol: ({ children }) => <ol className="mb-3 list-decimal space-y-1 pl-5 last:mb-0">{children}</ol>,
                             a: ({ children, href }) => <a className="text-[#d3d5da] underline hover:text-[#d3d5da]" href={href} rel="noreferrer" target="_blank">{children}</a>,
                             code: ({ children, className }) => (
-                              <code className={className ? 'block overflow-x-auto rounded-lg bg-black/30 p-3 text-base text-[#d3d5da]' : 'rounded bg-black/30 px-1.5 py-0.5 text-base text-[#d3d5da]'}>
+                              <code className={className ? 'block overflow-x-auto rounded-lg bg-black/30 p-3 text-lg text-[#d3d5da]' : 'rounded bg-black/30 px-1.5 py-0.5 text-lg text-[#d3d5da]'}>
                                 {children}
                               </code>
                             ),
@@ -220,7 +274,7 @@ const Dashboard = () => {
                   </div>
                 ))}
                 {isLoading && (
-                  <div className="flex items-center gap-3 text-base text-[#d3d5da]">
+                  <div className="flex items-center gap-3 text-lg text-[#d3d5da]">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1d7f86]/20 text-[#d3d5da]">
                       <Icon className="h-4 w-4">
                         <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" />
@@ -231,13 +285,14 @@ const Dashboard = () => {
                 )}
               </div>
             )}
+            </div>
           </div>
 
-          <div className="mx-auto w-full max-w-3xl px-5 pb-5 sm:px-8">
+          <div className="mx-auto w-full max-w-3xl shrink-0 px-5 pb-5 sm:px-8">
             <form className="rounded-2xl border border-white/12 bg-[#1a1e1f] p-2 shadow-2xl shadow-black/20" onSubmit={sendMessage}>
               <textarea
                 aria-label="Message Nexa"
-                className="block min-h-12.5 w-full resize-none bg-transparent px-3 py-2.5 text-lg text-[#d3d5da] outline-none placeholder:text-[#d3d5da]"
+                className="scrollbar-none block min-h-12.5 w-full resize-none overflow-y-auto bg-transparent px-3 py-2.5 text-xl text-[#d3d5da] outline-none placeholder:text-[#d3d5da]"
                 onChange={(event) => setPrompt(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.shiftKey) {
@@ -250,7 +305,7 @@ const Dashboard = () => {
                 value={prompt}
               />
               <div className="flex items-center justify-between px-2 pb-1">
-                <span className="text-[15px] text-[#d3d5da]">Nexa can make mistakes. Check important info.</span>
+                <span className="text-base text-[#d3d5da]">Nexa can make mistakes. Check important info.</span>
                 <button
                   aria-label="Send message"
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1d7f86] text-[#d3d5da] transition hover:bg-[#2499a1] disabled:cursor-not-allowed disabled:opacity-40"

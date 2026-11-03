@@ -74,7 +74,6 @@ export const useChat = () => {
             const nextChats = { ...chats }
             delete nextChats[chatId]
             dispatch(setChats(nextChats))
-            dispatch(setCurrentChatId(null))
         } catch (error) {
             dispatch(setError(error.response?.data?.message || "Unable to delete conversation"))
             throw error

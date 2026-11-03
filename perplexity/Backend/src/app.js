@@ -13,7 +13,7 @@ app.use(morgan("dev"))
 app.use(cors({
     origin:"http://localhost:5173",
     credentials:true,
-    methods:["get", "post", "put", "delete"],
+    methods:["get", "post", "put", "DELETE"],
 }))
 
 app.use('/api/auth', authRouter)
