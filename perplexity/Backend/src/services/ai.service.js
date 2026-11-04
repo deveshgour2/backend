@@ -2,7 +2,7 @@ import { ChatGoogle } from "@langchain/google/node";
 import { HumanMessage, SystemMessage, AIMessage } from "langchain"
 
 const model = new ChatGoogle({
-  model: "gemini-3.1-flash-lite",
+  model: "gemini-flash-lite-latest",
   apiKey: process.env.GEMINI_API_KEY
 });
 

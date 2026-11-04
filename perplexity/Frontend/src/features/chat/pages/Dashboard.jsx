@@ -37,11 +37,16 @@ const Dashboard = () => {
   }, [])
 
   const activeChat = activeChatId ? chats[activeChatId] : null
+  const activeChatTitle = activeChat?.title || 'Prompto'
   const messages = activeChat?.messages || []
   const displayedMessages = pendingMessage
     ? [...messages, { content: pendingMessage, role: 'user', pending: true }]
     : messages
   const recentChats = Object.values(chats)
+
+  useEffect(() => {
+    document.title = activeChatTitle
+  }, [activeChatTitle])
 
   const selectChat = async (chatId) => {
     setActiveChatId(chatId)
@@ -102,8 +107,6 @@ const Dashboard = () => {
   }
 
   const displayName = user?.username || user?.name || 'there'
-  const activeChatTitle = activeChat?.title || 'New conversation'
-
   return (
     <main className="flex h-screen w-full overflow-hidden bg-[#101314] text-[#d3d5da]">
       <aside className="hidden w-80 shrink-0 flex-col border-r border-white/[0.07] bg-[#171a1b] md:flex">
@@ -113,7 +116,7 @@ const Dashboard = () => {
               <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" />
             </Icon>
           </div>
-          <span className="text-2xl font-bold tracking-tight text-[#d3d5da]">Nexa</span>
+          <span className="text-2xl font-bold tracking-tight text-[#d3d5da]">Prompto</span>
         </div>
 
         <div className="px-3">
@@ -192,7 +195,7 @@ const Dashboard = () => {
                 <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4 18.4 5.6" />
               </Icon>
             </div>
-            <span className="text-xl font-bold text-[#d3d5da]">Nexa</span>
+            <span className="text-xl font-bold text-[#d3d5da]">Prompto</span>
           </div>
           <p className="hidden max-w-[60%] truncate text-base font-medium text-[#d3d5da] md:block">{activeChatTitle}</p>
           <div className="relative">
@@ -280,7 +283,7 @@ const Dashboard = () => {
                         <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" />
                       </Icon>
                     </div>
-                    <span className="animate-pulse">Nexa is thinking...</span>
+                    <span className="animate-pulse">Prompto is thinking...</span>
                   </div>
                 )}
               </div>
@@ -291,7 +294,7 @@ const Dashboard = () => {
           <div className="mx-auto w-full max-w-3xl shrink-0 px-5 pb-5 sm:px-8">
             <form className="rounded-2xl border border-white/12 bg-[#1a1e1f] p-2 shadow-2xl shadow-black/20" onSubmit={sendMessage}>
               <textarea
-                aria-label="Message Nexa"
+                aria-label="Message Prompto"
                 className="scrollbar-none block min-h-12.5 w-full resize-none overflow-y-auto bg-transparent px-3 py-2.5 text-xl text-[#d3d5da] outline-none placeholder:text-[#d3d5da]"
                 onChange={(event) => setPrompt(event.target.value)}
                 onKeyDown={(event) => {
@@ -300,12 +303,12 @@ const Dashboard = () => {
                     sendMessage(event)
                   }
                 }}
-                placeholder="Message Nexa..."
+                placeholder="Message Prompto..."
                 rows="1"
                 value={prompt}
               />
               <div className="flex items-center justify-between px-2 pb-1">
-                <span className="text-base text-[#d3d5da]">Nexa can make mistakes. Check important info.</span>
+                <span className="text-base text-[#d3d5da]">Prompto can make mistakes. Check important info.</span>
                 <button
                   aria-label="Send message"
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1d7f86] text-[#d3d5da] transition hover:bg-[#2499a1] disabled:cursor-not-allowed disabled:opacity-40"
