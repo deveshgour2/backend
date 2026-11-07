@@ -1,5 +1,5 @@
 import { ChatGoogle } from "@langchain/google/node";
-import { HumanMessage, SystemMessage, AIMessage, tool, createAgent} from "langchain"
+import { HumanMessage, SystemMessage, AIMessage, tool, createAgent } from "langchain"
 import * as z from "zod"
 import { searchInternet } from "./internet.service.js";
 
@@ -11,8 +11,8 @@ const geminiModel = new ChatGoogle({
 const searchInternetTool = tool(
   searchInternet,
   {
-    name:"searchInternet",
-    description:"useful for when you need to answer questions about current events or the world. Input should be a search query and the output will be the search results.",
+    name: "searchInternet",
+    description: "useful for when you need to answer questions about current events or the world. Input should be a search query and the output will be the search results.",
     schema: z.object({
       query: z.string().describe("the search query to use for searching the internet")
     })
@@ -26,14 +26,21 @@ const agent = createAgent({
 
 export async function generateResponse(messages) {
   const response = await agent.invoke({
-      messages: messages.map(msg => {
-    if (msg.role == "user") {
-      return new HumanMessage(msg.content)
-    } else if (msg.role == "ai") {
-      return new AIMessage(msg.content)
-    }
+    messages: [
+
+      new SystemMessage(`
+        you are a helpful and prcise assistant for answering questions.
+        if you don't know the answer to a question, you should say dont know. if the user asks you to search the internet for information, you should use the searchInternet tool to search the internet and provide the results to the user.
+        `),
+
+      ...(messages.map(msg => {
+        if (msg.role == "user") {
+          return new HumanMessage(msg.content)
+        } else if (msg.role == "ai") {
+          return new AIMessage(msg.content)
+        }
+      }))]
   })
-})
 
   return response.messages[response.messages.length - 1].text
 }

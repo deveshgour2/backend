@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useNavigate } from 'react-router'
 import { useChat } from '../hooks/useChat'
 import { useAuth } from '../../auth/hooks/useAuth'
@@ -254,6 +255,7 @@ const Dashboard = () => {
                         message.content
                       ) : (
                         <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
                           components={{
                             h1: ({ children }) => <h1 className="mb-3 text-2xl font-semibold text-[#d3d5da]">{children}</h1>,
                             h2: ({ children }) => <h2 className="mb-3 text-xl font-semibold text-[#d3d5da]">{children}</h2>,
