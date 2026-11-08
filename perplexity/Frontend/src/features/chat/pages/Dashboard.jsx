@@ -31,6 +31,7 @@ const Dashboard = () => {
   const [activeChatId, setActiveChatId] = useState(currentChatId || null)
   const [pendingMessage, setPendingMessage] = useState(null)
   const [isOptionsOpen, setIsOptionsOpen] = useState(false)
+  const [copiedMessageId, setCopiedMessageId] = useState(null)
 
   useEffect(() => {
     initializeSocketConnection()
@@ -102,6 +103,16 @@ const Dashboard = () => {
     try {
       await handleLogout()
       navigate('/login', { replace: true })
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const copyMessage = async (content, messageId) => {
+    try {
+      await navigator.clipboard.writeText(content)
+      setCopiedMessageId(messageId)
+      setTimeout(() => setCopiedMessageId(null), 2000)
     } catch (error) {
       console.error(error)
     }
@@ -242,7 +253,7 @@ const Dashboard = () => {
             ) : (
               <div className="space-y-7">
                 {displayedMessages.map((message, index) => (
-                  <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : ''}`} key={`${message.role}-${message._id || index}`}>
+                  <div className={`group flex gap-3 ${message.role === 'user' ? 'justify-end' : ''}`} key={`${message.role}-${message._id || index}`}>
                     {message.role !== 'user' && (
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1d7f86]/20 text-[#d3d5da]">
                         <Icon className="h-4 w-4">
@@ -250,7 +261,7 @@ const Dashboard = () => {
                         </Icon>
                       </div>
                     )}
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-xl leading-8 ${message.role === 'user' ? 'bg-[#1d7f86] text-[#d3d5da]' : 'bg-white/6 text-[#d3d5da]'}`}>
+                    <div className={`max-w-[80%] text-xl leading-8 ${message.role === 'user' ? 'rounded-2xl bg-[#1d7f86] px-4 py-3 text-[#d3d5da]' : 'text-[#d3d5da]'}`}>
                       {message.role === 'user' ? (
                         message.content
                       ) : (
@@ -274,6 +285,26 @@ const Dashboard = () => {
                         >
                           {message.content}
                         </ReactMarkdown>
+                      )}
+                      {message.role !== 'user' && (
+                        <button
+                          aria-label={copiedMessageId === `${message.role}-${message._id || index}` ? 'Copied AI reply' : 'Copy AI reply'}
+                          className="mt-2 flex items-center gap-1.5 rounded-md p-1.5 text-sm text-[#d3d5da] opacity-0 transition hover:bg-white/10 group-hover:opacity-100 focus-visible:opacity-100"
+                          onClick={() => copyMessage(message.content, `${message.role}-${message._id || index}`)}
+                          type="button"
+                        >
+                          <Icon className="h-4 w-4">
+                            {copiedMessageId === `${message.role}-${message._id || index}` ? (
+                              <path d="m5 12 4 4L19 6" />
+                            ) : (
+                              <>
+                                <path d="M9 9h10v10H9z" />
+                                <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+                              </>
+                            )}
+                          </Icon>
+                          {copiedMessageId === `${message.role}-${message._id || index}` ? 'Copied' : 'Copy'}
+                        </button>
                       )}
                     </div>
                   </div>
