@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -23,12 +23,33 @@ const Icon = ({ children, className = 'h-5 w-5' }) => (
 
 const LOGO_PATH = 'M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4'
 
-const SUGGESTIONS = [
+const DEFAULT_SUGGESTIONS = [
   'Explain this error message',
   'Give me MERN project ideas',
   'Write a LinkedIn post about my project',
   'Plan my study day'
 ]
+
+const createSuggestions = (recentChats) => {
+  const historySuggestions = recentChats
+    .filter((chat) => chat.title)
+    .flatMap((chat) => [
+      `Continue exploring "${chat.title}"`,
+      `Give me a new perspective on "${chat.title}"`,
+      `Summarize my conversation about "${chat.title}"`
+    ])
+
+  const availableSuggestions = [...new Set([...historySuggestions, ...DEFAULT_SUGGESTIONS])]
+  for (let index = availableSuggestions.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
+    ;[availableSuggestions[index], availableSuggestions[randomIndex]] = [
+      availableSuggestions[randomIndex],
+      availableSuggestions[index]
+    ]
+  }
+
+  return availableSuggestions.slice(0, 4)
+}
 
 const Dashboard = () => {
   const { initializeSocketConnection, handleSendMessage, handleGetChats, handleGetMessages, handleDeleteChat } = useChat()
@@ -40,7 +61,8 @@ const Dashboard = () => {
   const [activeChatId, setActiveChatId] = useState(currentChatId || null)
   const [pendingMessage, setPendingMessage] = useState(null)
   const [isOptionsOpen, setIsOptionsOpen] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 768)
+  const [chatSearch, setChatSearch] = useState('')
   const [copiedMessageId, setCopiedMessageId] = useState(null)
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
@@ -57,9 +79,18 @@ const Dashboard = () => {
     ? [...messages, { content: pendingMessage, role: 'user', pending: true }]
     : messages
   // newest chat first (works when chats have createdAt / updatedAt, otherwise keeps the original order)
-  const recentChats = [...Object.values(chats)].sort(
-    (a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0)
+  const recentChats = useMemo(
+    () => [...Object.values(chats)].sort(
+      (a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0)
+    ),
+    [chats]
   )
+  const filteredChats = useMemo(() => {
+    const query = chatSearch.trim().toLowerCase()
+    if (!query) return recentChats
+    return recentChats.filter((chat) => (chat.title || 'New conversation').toLowerCase().includes(query))
+  }, [chatSearch, recentChats])
+  const suggestions = useMemo(() => createSuggestions(recentChats), [recentChats])
 
   useEffect(() => {
     document.title = activeChatTitle
@@ -92,7 +123,6 @@ const Dashboard = () => {
 
   const selectChat = async (chatId) => {
     setActiveChatId(chatId)
-    setIsSidebarOpen(false)
     if (!chats[chatId]?.messages?.length) {
       await handleGetMessages(chatId).catch((error) => console.error(error))
     }
@@ -123,7 +153,6 @@ const Dashboard = () => {
   const startNewChat = () => {
     setPrompt('')
     setActiveChatId(null)
-    setIsSidebarOpen(false)
     textareaRef.current?.focus()
   }
 
@@ -161,6 +190,11 @@ const Dashboard = () => {
     }
   }
 
+  const editMessage = (content) => {
+    setPrompt(content)
+    textareaRef.current?.focus()
+  }
+
   const useSuggestion = (text) => {
     setPrompt(text)
     textareaRef.current?.focus()
@@ -178,57 +212,89 @@ const Dashboard = () => {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-30 flex w-80 max-w-[85vw] shrink-0 flex-col border-r border-white/[0.07] bg-[#171a1b] transition-transform duration-200 md:static md:z-auto md:max-w-none md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-30 flex max-w-[85vw] shrink-0 flex-col border-r border-white/[0.07] bg-[#171a1b] text-[#d3d5da] transition-all duration-200 md:static md:z-auto md:max-w-none md:translate-x-0 ${isSidebarOpen ? 'w-80 translate-x-0 md:w-72' : 'w-20 translate-x-0 md:w-20'}`}
       >
-        <div className="flex h-19 items-center gap-3 px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1d7f86] shadow-lg shadow-[#1d7f86]/20">
+        <div className={`flex items-center gap-3 ${isSidebarOpen ? 'h-19 px-5' : 'flex-col justify-center gap-2 px-2 py-3'}`}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1d7f86] shadow-lg shadow-[#1d7f86]/20">
             <Icon className="h-5 w-5 text-[#d3d5da]">
               <path d={LOGO_PATH} />
             </Icon>
           </div>
-          <span className="text-2xl font-bold tracking-tight text-[#d3d5da]">Prompto</span>
+          {isSidebarOpen && <span className="text-2xl font-bold tracking-tight text-[#d3d5da]">Prompto</span>}
+          <button
+            aria-expanded={isSidebarOpen}
+            aria-label={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+            className={`${isSidebarOpen ? 'ml-auto' : ''} rounded-lg p-2 text-[#d3d5da] transition hover:bg-white/10`}
+            onClick={() => setIsSidebarOpen((open) => !open)}
+            type="button"
+          >
+            <Icon>
+              {isSidebarOpen ? <path d="M15 6 9 12l6 6" /> : <path d="m9 6 6 6-6 6" />}
+            </Icon>
+          </button>
         </div>
 
-        <div className="px-3">
+        <div className={isSidebarOpen ? 'px-3' : 'px-2'}>
           <button
-            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/6 px-4 py-3 text-base font-medium text-[#d3d5da] transition hover:border-[#1d7f86]/60 hover:bg-[#1d7f86]/10"
+            aria-label="New conversation"
+            className={`flex rounded-xl border border-white/10 bg-white/6 py-3 text-base font-medium text-[#d3d5da] transition hover:border-[#1d7f86]/60 hover:bg-[#1d7f86]/10 ${isSidebarOpen ? 'w-full items-center gap-3 px-4' : 'w-full items-center justify-center px-2'}`}
             onClick={startNewChat}
             type="button"
           >
             <Icon className="h-4.5 w-4.5">
               <path d="M12 5v14M5 12h14" />
             </Icon>
-            New conversation
+            {isSidebarOpen && 'New conversation'}
           </button>
         </div>
 
-        <div className="scrollbar-none mt-8 flex-1 overflow-y-auto px-3">
-          <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#8b9296]">
-            Recent conversations
-          </p>
+        {isSidebarOpen && (
+          <label className="mx-3 mt-4 flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-[#8b9296]">
+            <Icon className="h-4 w-4">
+              <circle cx="11" cy="11" r="6" />
+              <path d="m16 16 4 4" />
+            </Icon>
+            <input
+              aria-label="Search conversations"
+              className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#8b9296]"
+              onChange={(event) => setChatSearch(event.target.value)}
+              placeholder="Search conversations"
+              value={chatSearch}
+            />
+          </label>
+        )}
+
+        <div className={`scrollbar-none mt-6 flex-1 overflow-y-auto ${isSidebarOpen ? 'px-3' : 'px-2'}`}>
+          {isSidebarOpen && (
+            <p className="px-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#8b9296]">
+              Recent conversations
+            </p>
+          )}
           <div className="mt-3 space-y-1">
-            {recentChats.length === 0 ? (
+            {filteredChats.length === 0 && isSidebarOpen ? (
               <p className="px-3 py-3 text-sm leading-5 text-[#8b9296]">
-                Your conversations will appear here after you send a message.
+                {chatSearch ? 'No conversations found.' : 'Your conversations will appear here after you send a message.'}
               </p>
-            ) : recentChats.map((chat) => (
+            ) : filteredChats.map((chat) => (
               <div
-                className={`group flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-base transition ${activeChatId === chat._id ? 'bg-[#1d7f86]/15 text-[#d3d5da]' : 'text-[#d3d5da] hover:bg-white/5 hover:text-[#d3d5da]'}`}
+                className={`group flex w-full items-center gap-2 rounded-lg py-2 text-left text-base transition ${isSidebarOpen ? 'px-3' : 'justify-center px-2'} ${activeChatId === chat._id ? 'bg-[#1d7f86]/15 text-[#d3d5da]' : 'text-[#d3d5da] hover:bg-white/5 hover:text-[#d3d5da]'}`}
                 key={chat._id}
               >
                 <button
-                  className="flex min-w-0 flex-1 items-center gap-3 py-1 text-left"
+                  aria-label={chat.title || 'Open conversation'}
+                  className={`flex min-w-0 items-center gap-3 py-1 text-left ${isSidebarOpen ? 'flex-1' : 'justify-center'}`}
                   onClick={() => selectChat(chat._id)}
+                  title={chat.title || 'New conversation'}
                   type="button"
                 >
                   <Icon className="h-4 w-4 shrink-0">
                     <path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.5 8.5 0 0 1-4-.9L4 19l1-3.5a7.2 7.2 0 0 1-1-4A7.5 7.5 0 0 1 12 4a7.5 7.5 0 0 1 8 7.5Z" />
                   </Icon>
-                  <span className="truncate">{chat.title || 'New conversation'}</span>
+                  {isSidebarOpen && <span className="truncate">{chat.title || 'New conversation'}</span>}
                 </button>
                 <button
                   aria-label={`Delete ${chat.title || 'conversation'}`}
-                  className="shrink-0 rounded-lg p-1.5 text-[#d3d5da] opacity-0 transition hover:bg-red-500/15 hover:text-red-300 group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-100"
+                  className={`shrink-0 rounded-lg p-1.5 text-[#d3d5da] opacity-0 transition hover:bg-red-500/15 hover:text-red-300 group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-100 ${isSidebarOpen ? '' : 'hidden'}`}
                   onClick={(event) => {
                     event.stopPropagation()
                     deleteConversation(chat._id)
@@ -244,40 +310,29 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="relative border-t border-white/[0.07] p-3">
-          <div className="flex items-center gap-3 rounded-xl px-3 py-2">
+        <div className={`relative border-t border-white/[0.07] p-3 ${isSidebarOpen ? '' : 'px-2'}`}>
+          <div className={`flex items-center gap-3 rounded-xl py-2 ${isSidebarOpen ? 'px-3' : 'justify-center px-0'}`}>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1d7f86] text-sm font-bold uppercase text-[#d3d5da]">
               {displayName.charAt(0)}
             </div>
-            <div className="min-w-0">
+            {isSidebarOpen && <div className="min-w-0">
               <p className="truncate text-base font-medium text-[#d3d5da]">{displayName}</p>
               <p className="text-sm text-[#8b9296]">Personal workspace</p>
-            </div>
+            </div>}
           </div>
         </div>
       </aside>
 
       <section className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-19 items-center justify-between border-b border-white/[0.07] px-5 sm:px-8">
-          <div className="flex items-center gap-3 md:hidden">
-            <button
-              aria-label="Open sidebar"
-              className="-ml-2 rounded-lg p-2 text-[#d3d5da] transition hover:bg-white/6"
-              onClick={() => setIsSidebarOpen(true)}
-              type="button"
-            >
-              <Icon>
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </Icon>
-            </button>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1d7f86]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1d7f86] md:hidden">
               <Icon className="h-4 w-4">
                 <path d={LOGO_PATH} />
               </Icon>
             </div>
-            <span className="text-xl font-bold text-[#d3d5da]">Prompto</span>
+            <span className="max-w-[min(60vw,28rem)] truncate text-xl font-bold text-[#d3d5da]">{activeChatTitle}</span>
           </div>
-          <p className="hidden max-w-[60%] truncate text-base font-medium text-[#d3d5da] md:block">{activeChatTitle}</p>
           <div className="relative">
             <button aria-expanded={isOptionsOpen} aria-label="More options" className="rounded-lg p-2 text-[#d3d5da] transition hover:bg-white/6 hover:text-[#d3d5da]" onClick={() => setIsOptionsOpen((open) => !open)} type="button">
               <Icon>
@@ -317,7 +372,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="mx-auto grid max-w-xl gap-3 sm:grid-cols-2">
-                  {SUGGESTIONS.map((text) => (
+                  {suggestions.map((text) => (
                     <button
                       className="rounded-xl border border-white/10 bg-white/3 px-4 py-3 text-left text-base text-[#d3d5da] transition hover:border-[#1d7f86]/60 hover:bg-[#1d7f86]/10"
                       key={text}
@@ -340,9 +395,43 @@ const Dashboard = () => {
                         </Icon>
                       </div>
                     )}
-                    <div className={`max-w-[80%] text-xl leading-8 ${message.role === 'user' ? 'whitespace-pre-wrap rounded-2xl bg-[#1d7f86] px-4 py-3 text-[#d3d5da]' : 'text-[#d3d5da]'}`}>
+                    <div className={`max-w-[80%] text-xl leading-8 ${message.role === 'user' ? 'flex flex-col items-end' : 'text-[#d3d5da]'}`}>
                       {message.role === 'user' ? (
-                        message.content
+                        <>
+                          <div className="whitespace-pre-wrap rounded-2xl bg-[#1d7f86] px-4 py-3 text-[#d3d5da]">
+                            {message.content}
+                          </div>
+                          <div className="mt-1 flex justify-end gap-1">
+                            <button
+                              aria-label={copiedMessageId === `user-${message._id || index}` ? 'Copied user message' : 'Copy user message'}
+                              className="rounded-md p-1.5 text-sm text-[#8b9296] opacity-0 transition hover:bg-white/10 hover:text-[#d3d5da] group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-100"
+                              onClick={() => copyMessage(message.content, `user-${message._id || index}`)}
+                              type="button"
+                            >
+                              <Icon className="h-4 w-4">
+                                {copiedMessageId === `user-${message._id || index}` ? (
+                                  <path d="m5 12 4 4L19 6" />
+                                ) : (
+                                  <>
+                                    <path d="M9 9h10v10H9z" />
+                                    <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+                                  </>
+                                )}
+                              </Icon>
+                            </button>
+                            <button
+                              aria-label="Edit user message"
+                              className="rounded-md p-1.5 text-sm text-[#8b9296] opacity-0 transition hover:bg-white/10 hover:text-[#d3d5da] group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-100"
+                              onClick={() => editMessage(message.content)}
+                              type="button"
+                            >
+                              <Icon className="h-4 w-4">
+                                <path d="m4 16-.8 4.8L8 20l11.5-11.5a2.1 2.1 0 0 0-3-3L5 17Z" />
+                                <path d="m14.5 7.5 3 3" />
+                              </Icon>
+                            </button>
+                          </div>
+                        </>
                       ) : (
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
