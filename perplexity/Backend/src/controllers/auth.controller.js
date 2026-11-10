@@ -30,7 +30,7 @@ export async function register(req, res) {
         to: email,
         subject: "Welcome to Perplexity",
         html: `  <p>Hi ${username},</p><p>Welcome to Perplexity! We're excited to have you on board.<br/>Please click the link below to verify your email address.</p>
-                <p><a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}">Verify Email</a></p>
+                <p><a href="https://prompto-5775.onrender.com/api/auth/verify-email?token=${emailVerificationToken}">Verify Email</a></p>
                 <p>Thank you for registering with us.</p>
                 <p>if you not registered with us, please ignore this email.</p>
                 <p>Best regards,<br/>The Perplexity Team</p>`,
@@ -72,7 +72,7 @@ export async function verifyEmail(req, res) {
         const html = `
     <h1>Email Verified Successfully</h1>
     <p>Your email has been verified successfully. You can now log in to your account.</p>
-    <a href="http://localhost:3000/api/auth/login">Login</a>`
+    <a href="https://prompto-5775.onrender.com/api/auth/login">Login</a>`
 
         return res.send(html)
     } catch (err) {
