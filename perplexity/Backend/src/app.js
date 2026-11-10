@@ -15,8 +15,13 @@ app.use(cors({
     credentials:true,
     methods:["get", "post", "put", "DELETE"],
 }))
+app.use(express.static("./public"))
 
 app.use('/api/auth', authRouter)
 app.use('/api/chats', chatRouter)
+
+app.use('*name', (req, res) => {
+    res.sendFile(__dirname , '..','/public/index.html')
+})
 
 export default app
