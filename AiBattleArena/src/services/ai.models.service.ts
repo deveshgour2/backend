@@ -5,12 +5,12 @@ import config from "../config/config.js";
 
 
 export const geminiModel  = new ChatGoogle({
-    model: "gemini-flash-latest",
+    model: "gemini-3.5-flash-lite",
     apiKey:config.GOOGLE_API_KEY
 })
 
 export const cohereModel = new ChatCohere({
-    model: "command-a-reasoning-08-2025",
+    model: "command-a-03-2025",
     apiKey: config.COHERE_API_KEY
 })
 
