@@ -1,14 +1,11 @@
 import express from "express"
-import useGraph from "./services/graph.ai.service.js"
+import runGraph from "./ai/graph.ai.js"
 
 const app = express()
 
-app.get("/health", (req, res) =>{
-    res.status(200).json({status: "ok"})
-})
-
-app.post("/use-graph", async (req, res)=>{
-    await useGraph("write factorial function in js")
+app.get("/", async (req, res) => {
+    const result = await runGraph("write a code of factorial in js")
+    res.json(result)
 })
 
 export default app
