@@ -12,8 +12,9 @@ export default function Sidebar({
   let sol2Wins = 0;
 
   evaluations.forEach((item) => {
-    const s1 = Number(item.judge?.solution_1_score) || 0;
-    const s2 = Number(item.judge?.solution_2_score) || 0;
+    const judge = item.judge || item.judge_recommendation;
+    const s1 = Number(judge?.solution_1_score) || 0;
+    const s2 = Number(judge?.solution_2_score) || 0;
     if (s1 > s2) sol1Wins++;
     else if (s2 > s1) sol2Wins++;
   });
@@ -80,8 +81,9 @@ export default function Sidebar({
 
               <div className="space-y-1">
                 {evaluations.map((item, idx) => {
-                  const s1 = Number(item.judge?.solution_1_score) || 0;
-                  const s2 = Number(item.judge?.solution_2_score) || 0;
+                  const judge = item.judge || item.judge_recommendation;
+                  const s1 = Number(judge?.solution_1_score) || 0;
+                  const s2 = Number(judge?.solution_2_score) || 0;
                   const winner = s1 > s2 ? 'Sol 1' : s2 > s1 ? 'Sol 2' : 'Tie';
 
                   return (
@@ -118,20 +120,7 @@ export default function Sidebar({
             </div>
 
             {/* Quick Actions */}
-            <div className="pt-2 border-t border-white/5">
-              <div className="px-2 pb-2 text-[11px] font-mono uppercase tracking-wider text-zinc-500">
-                Data Tools
-              </div>
-              <button
-                onClick={onOpenImport}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px] text-emerald-400">
-                  data_object
-                </span>
-                <span>Import JSON Schema</span>
-              </button>
-            </div>
+           
           </div>
         </div>
 

@@ -5,22 +5,29 @@ import JudgePanel from './JudgePanel';
 export default function MessageItem({
   evaluation,
   roundIndex,
-  viewMode = 'side-by-side', // 'side-by-side', 'stacked', 'tabs'
-  model1Name = 'Solution 1 (Model Alpha)',
-  model2Name = 'Solution 2 (Model Beta)'
+  viewMode = 'side-by-side',
+  model1Name = 'GROQ',
+model2Name = 'COHERE'
 }) {
-  const [activeTab, setActiveTab] = useState('solution_1'); // for tabs mode
+  const [activeTab, setActiveTab] = useState('solution_1');
   const [copiedSol1, setCopiedSol1] = useState(false);
   const [copiedSol2, setCopiedSol2] = useState(false);
 
-  const { problem, solution_1, solution_2, judge, timestamp, tags } = evaluation;
+  const {
+    problem,
+    solution_1,
+    solution_2,
+    judge,
+    judge_recommendation: legacyJudge
+  } = evaluation || {};
+  const resolvedJudge = judge || legacyJudge;
 
-  const score1 = Number(judge?.solution_1_score) || 0;
-  const score2 = Number(judge?.solution_2_score) || 0;
+  const score1 = Number(resolvedJudge?.solution_1_score) || 0;
+  const score2 = Number(resolvedJudge?.solution_2_score) || 0;
 
   const isSol1Winner = score1 > score2;
   const isSol2Winner = score2 > score1;
-
+  
   const copySolution = (text, setCopied) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -42,24 +49,8 @@ export default function MessageItem({
                 <span className="text-zinc-500">•</span>
                 <span className="text-xs font-mono text-zinc-400">Round #{roundIndex + 1}</span>
               </div>
-              <span className="text-[11px] font-mono text-zinc-500">
-                {timestamp || 'Just now'}
-              </span>
             </div>
           </div>
-
-          {tags && tags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-[11px] font-mono text-zinc-400"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Problem text */}
@@ -79,12 +70,9 @@ export default function MessageItem({
               Dual Generated Solutions
             </h4>
           </div>
-
-          <div className="text-xs font-mono text-zinc-500">
-            {viewMode === 'side-by-side' ? 'Parallel Side-by-Side View' : 'Sequential View'}
-          </div>
         </div>
 
+      
         {/* Tab switcher if in tabs mode */}
         {viewMode === 'tabs' && (
           <div className="flex items-center gap-2 border-b border-white/10 pb-2">
@@ -98,7 +86,7 @@ export default function MessageItem({
             >
               <span>{model1Name}</span>
               {isSol1Winner && (
-                <span className="px-1.5 py-0.2 rounded bg-emerald-500/30 text-emerald-300 font-mono text-[10px] uppercase font-bold">
+                <span className="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-300 font-mono text-[10px] uppercase font-bold">
                   Winner ({score1})
                 </span>
               )}
@@ -113,7 +101,7 @@ export default function MessageItem({
             >
               <span>{model2Name}</span>
               {isSol2Winner && (
-                <span className="px-1.5 py-0.2 rounded bg-amber-500/30 text-amber-300 font-mono text-[10px] uppercase font-bold">
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-300 font-mono text-[10px] uppercase font-bold">
                   Winner ({score2})
                 </span>
               )}
@@ -247,7 +235,7 @@ export default function MessageItem({
 
       {/* 3. AI Judge Recommendation Section */}
       <JudgePanel
-        judge={judge}
+        judge={resolvedJudge}
         solution1Title={model1Name}
         solution2Title={model2Name}
       />

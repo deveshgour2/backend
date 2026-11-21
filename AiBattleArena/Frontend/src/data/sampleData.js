@@ -1,9 +1,7 @@
+
 export const initialEvaluations = [
   {
-    id: "eval-1",
-    timestamp: "Today at 14:32:08",
-    problem: "Implement a thread-safe, concurrent LRU Cache in Rust with O(1) get/put operations, evictions under high contention, and minimal lock contention overhead. Compare safety guarantees, memory footprint, and benchmarks.",
-    tags: ["Rust 1.78+", "Concurrency", "Lock-Free / Sharded", "Zero-Allocation"],
+   
     solution_1: `### Sharded Concurrent LRU with Epoch-based Collection
 
 This solution uses **64-way hash-striped partitioned architecture** combined with Crossbeam epoch reclamation and fine-grained stripe locks.
@@ -115,7 +113,7 @@ impl<K: Clone + Eq + std::hash::Hash, V: Clone> BasicLRU<K, V> {
     }
   },
   {
-    id: "eval-2",
+    id: 10,
     timestamp: "Today at 15:04:12",
     problem: "Design an in-memory distributed Rate Limiter in Go using the Token Bucket algorithm. It must support high-throughput multi-tenant rate limiting with microsecond latencies and graceful burst handling.",
     tags: ["Go 1.22", "Token Bucket", "Atomics", "Distributed Sync"],
@@ -238,28 +236,5 @@ func (b *TickerBucket) Allow() bool {
       solution_1_reasoning: "Solution 1 represents production-grade Go engineering. Packing token count and timestamps into an atomic uint64 allows 100% lock-free access with sub-nanosecond overhead. Mathematical on-demand refill avoids background goroutines entirely.",
       solution_2_reasoning: "Solution 2 is unscalable for multi-tenant systems. Spawning a persistent goroutine and time.Ticker per bucket will exhaust memory and trigger catastrophic timer churn in the Go runtime when tracking thousands of API keys."
     }
-  }
-];
-
-export const samplePrompts = [
-  {
-    title: "Rust Concurrent LRU",
-    prompt: "Implement a thread-safe concurrent LRU Cache in Rust with O(1) get/put operations and minimal lock contention.",
-    tags: ["Rust", "Concurrency", "Cache"]
-  },
-  {
-    title: "Distributed Rate Limiter",
-    prompt: "Design an in-memory distributed Rate Limiter in Go using the Token Bucket algorithm with microsecond latencies.",
-    tags: ["Go", "Distributed", "High-Throughput"]
-  },
-  {
-    title: "Database Sharding Key Strategy",
-    prompt: "Compare Consistent Hashing vs Range-based Partitioning for sharding a 10TB PostgreSQL cluster under write-heavy workloads.",
-    tags: ["Database", "Architecture", "Sharding"]
-  },
-  {
-    title: "Zero-Copy WebSocket Parser",
-    prompt: "Build a high-performance WebSocket frame parser in TypeScript using ArrayBuffer and DataView with zero intermediate allocations.",
-    tags: ["TypeScript", "Performance", "Networking"]
   }
 ];

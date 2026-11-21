@@ -3,9 +3,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import MessageItem from './components/MessageItem';
 import PromptInput from './components/PromptInput';
-import JsonImportModal from './components/JsonImportModal';
 import { initialEvaluations } from './data/sampleData';
-import { generateMockEvaluation } from './utils/generateEvaluation';
 
 export default function App() {
   const [evaluations, setEvaluations] = useState(() => {
@@ -39,20 +37,30 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const handleSendMessage = (promptText) => {
+  const handleSendMessage = (evaluation) => {
     setIsSubmitting(true);
 
-    // Simulate AI generation delay
-    setTimeout(() => {
-      const newEval = generateMockEvaluation(promptText);
-      setEvaluations((prev) => [...prev, newEval]);
-      setCurrentRound(evaluations.length);
-      setIsSubmitting(false);
+    const newEval = {
+      id: `eval-${Date.now()}`,
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }),
+      problem: evaluation?.problem || '',
+      solution_1: evaluation?.solution_1 || '',
+      solution_2: evaluation?.solution_2 || '',
+      judge: evaluation?.judge || evaluation?.judge_recommendation || null,
+      tags: evaluation?.tags || ['Groq', 'Cohere', 'Gemini Judge']
+    };
 
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }, 700);
+    setEvaluations((prev) => [...prev, newEval]);
+    setCurrentRound(evaluations.length);
+    setIsSubmitting(false);
+
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handleImportJson = (parsedData) => {
@@ -171,24 +179,7 @@ export default function App() {
                 Send any technical challenge or problem statement. The arena generates two competing solutions evaluated side-by-side by an AI Judge.
               </p>
 
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <button
-                  onClick={() => setEvaluations(initialEvaluations)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-                  <span>Load Sample Evaluations</span>
-                </button>
-                <button
-                  onClick={() => setIsImportModalOpen(true)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium text-xs transition-all cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[16px] text-emerald-400">
-                    data_object
-                  </span>
-                  <span>Paste Custom JSON</span>
-                </button>
-              </div>
+            
             </div>
           ) : (
             /* Evaluations List */
@@ -199,8 +190,8 @@ export default function App() {
                     evaluation={item}
                     roundIndex={index}
                     viewMode={viewMode}
-                    model1Name="Solution 1 (Model Alpha)"
-                    model2Name="Solution 2 (Model Beta)"
+                    model1Name="GROQ"
+                    model2Name="COHERE"
                   />
                 </div>
               ))}
@@ -216,12 +207,7 @@ export default function App() {
         />
       </div>
 
-      {/* JSON Import Modal */}
-      <JsonImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onImport={handleImportJson}
-      />
+    
     </div>
   );
 }

@@ -1,23 +1,44 @@
 import { useState, useRef } from 'react';
-import { samplePrompts } from '../data/sampleData';
+import axios from 'axios';
+
 
 export default function PromptInput({ onSendMessage, isSubmitting = false }) {
   const [prompt, setPrompt] = useState('');
+  const [isRequesting, setIsRequesting] = useState(false);
   const textareaRef = useRef(null);
+  const busy = isSubmitting || isRequesting;
 
-  const handleSubmit = (e) => {
+  async function handleSubmit(e) {
     if (e) e.preventDefault();
-    if (!prompt.trim() || isSubmitting) return;
+    if (!prompt.trim() || busy) return;
 
-    onSendMessage(prompt.trim());
-    setPrompt('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+    setIsRequesting(true);
+    try {
+      const response = await axios.post("http://localhost:3000/invoke", { input: prompt.trim() });
+      const result = response.data?.result;
+
+      if (!result || typeof result !== 'object') {
+        throw new Error('The backend returned an invalid evaluation.');
+      }
+
+      onSendMessage({
+        problem: prompt.trim(),
+        ...result
+      });
+      setPrompt('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+    } catch (error) {
+      console.error('Failed to invoke the AI arena:', error);
+      window.alert(error.response?.data?.message || error.message || 'Failed to generate solutions.');
+    } finally {
+      setIsRequesting(false);
     }
   };
 
   const handleKeyDown = (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    if (e.key === 'Enter') {
       e.preventDefault();
       handleSubmit();
     }
@@ -40,21 +61,7 @@ export default function PromptInput({ onSendMessage, isSubmitting = false }) {
     <div className="fixed bottom-0 left-0 lg:left-64 right-0 z-30 p-4 lg:p-6 bg-gradient-to-t from-[#0b0d14] via-[#0b0d14]/95 to-transparent backdrop-blur-sm">
       <div className="max-w-6xl mx-auto">
         {/* Suggestion Chips */}
-        <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 text-xs no-scrollbar">
-          <span className="text-zinc-500 font-mono text-[11px] uppercase tracking-wider shrink-0 flex items-center gap-1">
-            <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-            Quick Prompts:
-          </span>
-          {samplePrompts.map((item, idx) => (
-            <button
-              key={idx}
-              onClick={() => handlePromptSelect(item.prompt)}
-              className="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/15 text-zinc-300 hover:text-white transition-all text-xs shrink-0 font-normal cursor-pointer"
-            >
-              {item.title}
-            </button>
-          ))}
-        </div>
+
 
         {/* Input Card Container */}
         <div className="relative rounded-2xl border border-white/15 bg-[#141724]/95 shadow-2xl backdrop-blur-xl p-3.5 focus-within:border-emerald-500/50 focus-within:ring-1 focus-within:ring-emerald-500/20 transition-all">
@@ -93,10 +100,10 @@ export default function PromptInput({ onSendMessage, isSubmitting = false }) {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={!prompt.trim() || isSubmitting}
+                disabled={!prompt.trim() || busy}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none text-zinc-950 font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
               >
-                {isSubmitting ? (
+                {busy ? (
                   <>
                     <span className="material-symbols-outlined text-[18px] animate-spin">
                       sync

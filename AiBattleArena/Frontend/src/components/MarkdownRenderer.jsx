@@ -172,6 +172,11 @@ function FormattedText({ text }) {
         const trimmed = para.trim();
         if (!trimmed) return null;
 
+        const table = parseMarkdownTable(trimmed);
+        if (table) {
+          return <MarkdownTable key={pIdx} table={table} />;
+        }
+
         // Headings
         if (trimmed.startsWith('#### ')) {
           return (
@@ -236,6 +241,80 @@ function FormattedText({ text }) {
           </p>
         );
       })}
+    </div>
+  );
+}
+
+function parseTableRow(line) {
+  let normalized = line.trim();
+  if (normalized.startsWith('|')) normalized = normalized.slice(1);
+  if (normalized.endsWith('|')) normalized = normalized.slice(0, -1);
+
+  return normalized.split('|').map((cell) => cell.trim());
+}
+
+function parseMarkdownTable(text) {
+  const lines = text.split('\n').map((line) => line.trim()).filter(Boolean);
+  if (lines.length < 3) return null;
+
+  const separator = lines[1];
+  const separatorCells = parseTableRow(separator);
+  if (!separatorCells.length || !separatorCells.every((cell) => /^:?-{3,}:?$/.test(cell))) {
+    return null;
+  }
+
+  const header = parseTableRow(lines[0]);
+  if (header.length !== separatorCells.length) return null;
+
+  const alignments = separatorCells.map((cell) => {
+    if (cell.startsWith(':') && cell.endsWith(':')) return 'center';
+    if (cell.endsWith(':')) return 'right';
+    if (cell.startsWith(':')) return 'left';
+    return 'left';
+  });
+
+  const rows = lines.slice(2).map(parseTableRow).filter((row) => row.length > 0);
+
+  return { header, alignments, rows };
+}
+
+function MarkdownTable({ table }) {
+  const alignmentClass = {
+    left: 'text-left',
+    center: 'text-center',
+    right: 'text-right'
+  };
+
+  return (
+    <div className="my-4 w-full overflow-x-auto rounded-xl border border-white/10">
+      <table className="w-full border-collapse text-sm">
+        <thead className="bg-zinc-900/80">
+          <tr>
+            {table.header.map((cell, index) => (
+              <th
+                key={index}
+                className={`border-b border-r border-white/10 px-4 py-3 font-semibold text-zinc-100 last:border-r-0 ${alignmentClass[table.alignments[index]]}`}
+              >
+                {parseInlineStyles(cell)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, rowIndex) => (
+            <tr key={rowIndex} className="bg-[#12141f]/60 even:bg-zinc-900/30">
+              {table.header.map((_, columnIndex) => (
+                <td
+                  key={columnIndex}
+                  className={`border-b border-r border-white/[0.07] px-4 py-3 text-zinc-300 last:border-r-0 ${alignmentClass[table.alignments[columnIndex]]}`}
+                >
+                  {parseInlineStyles(row[columnIndex] || '')}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
