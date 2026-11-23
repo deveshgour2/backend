@@ -46,11 +46,36 @@ export const registerUser = async (req, res) => {
             email,
             contact,
             password,
-            fullName, 
+            fullName,
             role: isSeller ? "seller" : "buyer"
         })
 
         await sendTokenResponse(user, res, "user registered successfully")
+
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({ message: "Internal server error" })
+    }
+}
+
+export const loginUser = async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+
+        const user = await userModel.findOne({ email })
+
+        if (!user) {
+            return res.status(400).json({ message: "user not found with this email" })
+        }
+
+        const isPasswordMatched = await user.comparePassword(password)
+
+        if (!isPasswordMatched) {
+            return res.status(400).json({ message: "password is incorrect" })
+        }
+
+        await sendTokenResponse(user, res, "user logged in successfully")
 
     } catch (err) {
         console.log(err)
