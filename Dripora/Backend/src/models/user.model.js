@@ -28,8 +28,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ["buyer", "seller"],
         default: "buyer"
-    },
-    timestamps: true
+    }
 })
 
 userSchema.pre("save", async function () {
