@@ -217,6 +217,10 @@ const Register = () => {
             </span>
           </label>
 
+          <a href="/api/auth/google"
+          className="underline text-center font-semibold cursor-pointer "
+          >continue with google</a>
+
           {/* Submit */}
           <div className="pt-2">
             <button
