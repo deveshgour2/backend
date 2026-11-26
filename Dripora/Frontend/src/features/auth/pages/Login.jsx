@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../hook/useAuth";
 import { useNavigate } from "react-router";
+import ContinueWithGoogle from "../components/ContinueWithGoogle";
 
 const Login = () => {
   const { handleLogin } = useAuth();
@@ -120,13 +121,7 @@ const Login = () => {
               >
                 Password
               </label>
-              <a
-                href="/forgot-password"
-                className="text-xs transition-colors hover:underline"
-                style={{ color: "#F5C518" }}
-              >
-                Forgot password?
-              </a>
+           
             </div>
             <div className="relative">
               <input
@@ -179,6 +174,9 @@ const Login = () => {
             >
               Sign In
             </button>
+            <p className="my-2.5 text-center text-xs uppercase tracking-widest text-zinc-500">or</p>
+
+            <ContinueWithGoogle/>
           </div>
         </form>
 

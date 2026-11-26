@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../hook/useAuth";
 import { useNavigate } from "react-router";
+import ContinueWithGoogle from "../components/ContinueWithGoogle";
 
 const Register = () => {
 
@@ -34,10 +35,10 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] flex">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-[#09090b] flex">
 
       {/* ── LEFT: Full-height image panel (desktop only) ── */}
-      <div className="hidden lg:block lg:w-[58%] relative overflow-hidden">
+      <div className="hidden lg:block lg:w-[58%] lg:h-full relative overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=1200&q=85&fit=crop"
           alt="Dripora fashion"
@@ -67,7 +68,7 @@ const Register = () => {
             Define your{" "}
             <span style={{ color: "#F5C518" }}>aesthetic.</span>
           </p>
-          <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+          <p className="mt-4 text-sm leading-relaxed text-zinc-200">
             Join the exclusive movement of creators and brands
             redefining the modern fashion landscape.
           </p>
@@ -75,10 +76,10 @@ const Register = () => {
       </div>
 
       {/* ── RIGHT: Form panel ── */}
-      <div className="flex flex-1 flex-col justify-center px-8 py-16 lg:px-16 xl:px-20">
+      <div className="flex flex-1 flex-col justify-center px-8 py-10 lg:h-full lg:py-6 lg:px-16 xl:px-20">
 
         {/* Mobile-only brand */}
-        <div className="mb-10 lg:hidden">
+        <div className="mb-8 lg:hidden">
           <span
             className="text-2xl font-bold tracking-widest uppercase"
             style={{ color: "#F5C518" }}
@@ -88,7 +89,7 @@ const Register = () => {
         </div>
 
         {/* Form header */}
-        <div className="mb-10">
+        <div className="mb-7">
           <p
             className="mb-2 text-xs font-semibold uppercase tracking-[0.2em]"
             style={{ color: "#F5C518" }}
@@ -103,7 +104,7 @@ const Register = () => {
           </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-7 max-w-sm w-full">
+        <form onSubmit={handleSubmit} className="space-y-5 max-w-sm w-full">
 
           {/* Full Name */}
           <div className="flex flex-col gap-1">
@@ -217,10 +218,6 @@ const Register = () => {
             </span>
           </label>
 
-          <a href="/api/auth/google"
-          className="underline text-center font-semibold cursor-pointer "
-          >continue with google</a>
-
           {/* Submit */}
           <div className="pt-2">
             <button
@@ -239,11 +236,15 @@ const Register = () => {
             >
               Register
             </button>
+
+            <p className="my-2.5 text-center text-xs uppercase tracking-widest text-zinc-500">or</p>
+
+            <ContinueWithGoogle/>
           </div>
         </form>
 
         {/* Footer */}
-        <p className="mt-8 text-sm text-zinc-500 max-w-sm">
+        <p className="mt-5 text-sm text-zinc-500 max-w-sm">
           Already have an A/c?{" "}
           <a href="/login" className="font-medium hover:underline" style={{ color: "#F5C518" }}>
             Sign in
