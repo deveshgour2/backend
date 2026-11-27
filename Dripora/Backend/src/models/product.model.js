@@ -25,7 +25,7 @@ const productSchema = new mongoose.Schema({
             default: 'INR'
         }
     },
-    image: [
+    images: [
         {
             url: {
                 type: String,
